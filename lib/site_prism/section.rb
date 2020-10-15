@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-require 'site_prism/loadable'
-
 module SitePrism
   class Section
-    include Capybara::DSL
     include ElementChecker
     include Loadable
     include DSL
@@ -12,17 +9,26 @@ module SitePrism
 
     attr_reader :root_element, :parent
 
-    def self.set_default_search_arguments(*args)
-      @default_search_arguments = args
-    end
+    class << self
+      def set_default_search_arguments(*args)
+        @default_search_arguments = args
+      end
 
-    def self.default_search_arguments
-      @default_search_arguments ||
-        (
-          superclass.respond_to?(:default_search_arguments) &&
-          superclass.default_search_arguments
-        ) ||
-        nil
+      def default_search_arguments
+        return @default_search_arguments if @default_search_arguments
+
+        superclass.respond_to?(:default_search_arguments) && superclass.default_search_arguments
+      end
+
+      private
+
+      def root_element_methods
+        ::Capybara::Session::NODE_METHODS + %i[native visible?]
+      end
+
+      def session_methods
+        ::Capybara::Session::DSL_METHODS - root_element_methods
+      end
     end
 
     def initialize(parent, root_element, &block)
@@ -31,29 +37,39 @@ module SitePrism
       within(&block) if block_given?
     end
 
-    def within
-      Capybara.within(@root_element) { yield(self) }
+    # Send all root_element methods through `#root_element`
+    # NB: This requires a method called `#to_capybara_node` being created and
+    # then set to this value (Capybara agnostic API)
+    root_element_methods.each do |method|
+      def_delegators :root_element, method
     end
 
-    # Capybara::DSL module "delegates" Capybara methods to the "page" method
-    # as such we need to overload this method so that the correct scoping
-    # occurs and calls within a section (For example section.find(element))
-    # correctly scope to look within the section only
+    # Send all methods that previously acted on the `#page` method that existed previously
+    # through to the same location - But directly as `Capybara.current_session`
+    session_methods.each do |method|
+      def_delegators :capybara_session, method
+    end
+
+    # This scopes our calls inside Section correctly to the `Capybara::Node::Element`
+    def to_capybara_node
+      root_element
+    end
+
+    # This allows us to return anything thats passed in as a block to the section at
+    # creation time, so that an anonymous section or such-like will have the extra methods
+    def within
+      Capybara.within(root_element) { yield(self) }
+    end
+
+    # This was the old API-style of delegating through the Capybara.page call and over-loading
+    # the method so we always went through our correct `root_element`
     def page
+      SitePrism::Deprecator.deprecate('Using page inside section')
       return root_element if root_element
 
-      SitePrism.logger.warn('Root Element not found; Falling back to `super`')
-      super
+      SitePrism.logger.warn('Root Element not found; Falling back to Capybara.current_session')
+      capybara_session
     end
-
-    def visible?
-      page.visible?
-    end
-
-    def_delegators :capybara_session,
-                   :execute_script,
-                   :evaluate_script,
-                   :within_frame
 
     def capybara_session
       Capybara.current_session
@@ -63,32 +79,6 @@ module SitePrism
       candidate = parent
       candidate = candidate.parent until candidate.is_a?(SitePrism::Page)
       candidate
-    end
-
-    def native
-      root_element.native
-    end
-
-    private
-
-    def _find(*find_args)
-      kwargs = find_args.pop
-      page.find(*find_args, **kwargs)
-    end
-
-    def _all(*find_args)
-      kwargs = find_args.pop
-      page.all(*find_args, **kwargs)
-    end
-
-    def element_exists?(*find_args)
-      kwargs = find_args.pop
-      page.has_selector?(*find_args, **kwargs)
-    end
-
-    def element_does_not_exist?(*find_args)
-      kwargs = find_args.pop
-      page.has_no_selector?(*find_args, **kwargs)
     end
   end
 end

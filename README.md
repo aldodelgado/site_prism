@@ -7,7 +7,7 @@ _A Page Object Model DSL for Capybara_
 SitePrism gives you a simple, clean and semantic DSL for describing your site using the Page Object Model pattern,
 for use with Capybara in automated acceptance testing.
 
-Find the pretty documentation here: http://rdoc.info/gems/site_prism/frames
+Find the pretty documentation here: https://rdoc.info/gems/site_prism/frames
 
 Make sure to add your project/company to https://github.com/site-prism/site_prism/wiki/Who-is-using-SitePrism
 
@@ -23,7 +23,7 @@ SitePrism is built and tested to work on Ruby 2.4 - 2.6. Ruby 2.3 (Now EOL), is 
 If you are using SitePrism with Ruby 2.3 it is highly advisable to upgrade to a more modern Ruby
 such as 2.6 or 2.7, if for any other reason, to get a noticeable speed boost!
 
-SitePrism should run on all major browsers. The gem's integration tests are ran on Chrome and Firefox.
+SitePrism should run on all major browsers. The gem's integration tests are run on Chrome and Firefox.
 
 If you find you cannot integrate nicely with SitePrism, please open an
 [issue request](https://github.com/site-prism/site_prism/issues/new)
@@ -298,7 +298,13 @@ expect(@account_page).to be_displayed
 ```
 
 Calling `#displayed?` will return true if the browser's current URL
-matches the page's template and false if it doesn't.
+matches the page's template and false if it doesn't. It will wait for
+`Capybara.default_max_wait_time` seconds or you can pass an explicit
+wait time in seconds as the first argument like this:
+
+```ruby
+@account_page.displayed?(10) # wait up to 10 seconds for display
+```
 
 #### Specifying parameter values for templated URLs
 
@@ -425,8 +431,11 @@ as a string.
 #### Accessing the individual element
 
 The `element` method will add a number of methods to instances of the
-particular Page class. The first method to be added is the name of the
-element. So using the following example:
+particular Page class. The first method added is the name of the
+element. It finds the element using [Capybara::Node::Finders#find](https://www.rubydoc.info/github/teamcapybara/capybara/master/Capybara/Node/Finders#find-instance_method)
+returning a [Capybara::Node::Element](https://www.rubydoc.info/github/teamcapybara/capybara/master/Capybara/Node/Element) or
+raising [Capybara::ElementNotFound](https://www.rubydoc.info/github/teamcapybara/capybara/master/Capybara/ElementNotFound)
+if the element can not be found.
 
 ```ruby
 class Home < SitePrism::Page
@@ -450,7 +459,9 @@ end
 #### Testing for the existence of the element
 
 Another method added to the Page class by the `element` method is the
-`has_<element_name>?` method. Using the same example as above:
+`has_<element_name>?` method.
+This method delegates to [Capybara::Node::Matchers#has_selector?](https://www.rubydoc.info/github/teamcapybara/capybara/master/Capybara/Node/Matchers#has_selector%3F-instance_method).
+Using the same example as above:
 
 ```ruby
 class Home < SitePrism::Page
@@ -480,7 +491,9 @@ end
 
 To test that an element does not exist on the page, it is not possible to just call
 `#not_to have_search_field`. SitePrism supplies the `#has_no_<element>?` method
-that should be used to test for non-existence. Using the above example:
+that should be used to test for non-existence.
+This method delegates to [Capybara::Node::Matchers#has_no_selector?](https://www.rubydoc.info/github/teamcapybara/capybara/master/Capybara/Node/Matchers#has_no_selector%3F-instance_method)
+Using the above example:
 
 ```ruby
 @home = Home.new
@@ -499,8 +512,9 @@ end
 #### Waiting for an element to become visible
 
 A method that gets added by calling `element` is the
-`wait_until_<element_name>_visible` method. Calling this method will
-cause the test to wait for Capybara's default wait time for the element
+`wait_until_<element_name>_visible` method.
+This method delegates to [Capybara::Node::Matchers#has_selector?](https://www.rubydoc.info/github/teamcapybara/capybara/master/Capybara/Node/Matchers#has_selector%3F-instance_method).
+Calling this method will cause the test to wait for Capybara's default wait time for the element
 to become visible. You can customise the wait time by supplying a number
 of seconds to wait in-line or configuring the default wait time.
 
@@ -513,10 +527,11 @@ of seconds to wait in-line or configuring the default wait time.
 #### Waiting for an element to become invisible
 
 Another method added by calling `element` is the
-`wait_until_<element_name>_invisible` method. Calling this method will
-cause the test to wait for Capybara's default wait time for the element
-to become invisible. You can as with the visibility waiter, customise
-the wait time in the same way.
+`wait_until_<element_name>_invisible` method.
+This method delegates to [Capybara::Node::Matchers#has_no_selector?](https://www.rubydoc.info/github/teamcapybara/capybara/master/Capybara/Node/Matchers#has_no_selector%3F-instance_method).
+Calling this method will cause the test to wait for Capybara's default
+wait time for the element to become invisible. You can as with the visibility
+waiter, customise the wait time in the same way.
 
 ```ruby
 @home.wait_until_search_field_invisible

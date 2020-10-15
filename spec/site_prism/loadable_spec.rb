@@ -91,11 +91,11 @@ describe SitePrism::Loadable do
       end
 
       it 'resets the loaded cache at the end of the block' do
-        expect(instance.loaded).to be_nil
+        previous_nil_loaded_state = instance.loaded
 
-        instance.when_loaded { |i| expect(i.loaded).to be true }
-
-        expect(instance.loaded).to be_nil
+        instance.when_loaded do |instance|
+          expect(previous_nil_loaded_state).not_to eq(instance.loaded)
+        end
       end
     end
 
@@ -116,8 +116,19 @@ describe SitePrism::Loadable do
 
         expect(instance).to receive(:false_thing?).once
         expect(instance).not_to receive(:true_thing?)
+        swallow_bad_validation do
+          expect(instance).to receive(:valid1?).once
 
-        expect { instance.when_loaded }.to raise_error(SitePrism::FailedLoadValidationError)
+          instance.when_loaded
+        end
+      end
+
+      it 'does not call other load validations after failing a load validation' do
+        swallow_bad_validation do
+          expect(instance).not_to receive(:valid2?)
+
+          instance.when_loaded
+        end
       end
     end
   end
@@ -126,7 +137,7 @@ describe SitePrism::Loadable do
     subject(:instance) { inheriting_loadable.new }
 
     let(:inheriting_loadable) { Class.new(loadable) }
-
+    
     before { inheriting_loadable.load_validation { [true_thing?, 'valid2 failed'] } }
 
     it 'returns true if loaded value is cached' do
@@ -135,6 +146,14 @@ describe SitePrism::Loadable do
       instance.loaded = true
 
       expect(instance).to be_loaded
+    end
+
+    it 'does not check load_validations if already loaded' do
+      instance.loaded = true
+
+      expect(instance).not_to receive(:valid2?)
+
+      instance.loaded?
     end
 
     it 'returns true if all load validations pass' do
@@ -167,7 +186,5 @@ describe SitePrism::Loadable do
 
       expect(instance.load_error).to eq('fubar')
     end
-
-    it { is_expected.to be_loaded }
   end
 end

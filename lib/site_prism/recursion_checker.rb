@@ -3,6 +3,7 @@
 module SitePrism
   class RecursionChecker
     attr_reader :instance
+
     private :instance
 
     def initialize(instance)
@@ -28,7 +29,7 @@ module SitePrism
         expected(mapped_items, :elements),
         expected(mapped_items, :section),
         expected(mapped_items, :sections),
-        expected(mapped_items, :iframe),
+        expected(mapped_items, :iframe)
       ]
     end
 
