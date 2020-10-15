@@ -100,7 +100,10 @@ describe SitePrism::Loadable do
     end
 
     context 'with failing validations' do
-      before { loadable.load_validation { [false_thing?, 'valid1 failed'] } }
+      before do
+        loadable.load_validation { [false_thing?, 'false_thing? failed'] }
+        loadable.load_validation { [true_thing?, 'true_thing? failed'] }
+      end
 
       it 'raises a `FailedLoadValidationError`' do
         expect { instance.when_loaded { :foo } }
@@ -108,16 +111,12 @@ describe SitePrism::Loadable do
       end
 
       it 'can be supplied with a user-defined message' do
-        expect { instance.when_loaded { :foo } }.to raise_error.with_message('valid1 failed')
+        expect { instance.when_loaded { :foo } }.to raise_error.with_message('false_thing? failed')
       end
 
       it 'raises an error immediately on the first validation failure' do
-        loadable.load_validation { [true_thing?, 'valid2 failed'] }
-
-        expect(instance).to receive(:false_thing?).once
-        expect(instance).not_to receive(:true_thing?)
         swallow_bad_validation do
-          expect(instance).to receive(:valid1?).once
+          expect(instance).to receive(:false_thing?).once
 
           instance.when_loaded
         end
@@ -125,7 +124,7 @@ describe SitePrism::Loadable do
 
       it 'does not call other load validations after failing a load validation' do
         swallow_bad_validation do
-          expect(instance).not_to receive(:valid2?)
+          expect(instance).not_to receive(:true_thing?)
 
           instance.when_loaded
         end
@@ -137,12 +136,8 @@ describe SitePrism::Loadable do
     subject(:instance) { inheriting_loadable.new }
 
     let(:inheriting_loadable) { Class.new(loadable) }
-    
-    before { inheriting_loadable.load_validation { [true_thing?, 'valid2 failed'] } }
 
     it 'returns true if loaded value is cached' do
-      expect(instance).not_to receive(:true_thing?)
-
       instance.loaded = true
 
       expect(instance).to be_loaded
@@ -151,7 +146,7 @@ describe SitePrism::Loadable do
     it 'does not check load_validations if already loaded' do
       instance.loaded = true
 
-      expect(instance).not_to receive(:valid2?)
+      expect(instance).not_to receive(:true_thing?)
 
       instance.loaded?
     end
