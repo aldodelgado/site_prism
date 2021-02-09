@@ -8,9 +8,9 @@ AllCops:
   TargetRubyVersion: 2.4
   NewCops: enable
 
-# This allows a longer LineLength whilst ignoring cuke definitions
+# This allows a longer LineLength and ignores cuke definitions
 Layout/LineLength:
-  Max: 100
+  Max: 140
   IgnoredPatterns:
     - '^Given'
     - '^When'
@@ -29,10 +29,6 @@ Naming/AccessorMethodName:
 # Stylistic preference to make the RSpec tests flow better
 RSpec/MessageSpies:
   EnforcedStyle: receive
-
-# We need to massively improve this! But for now the suite is not under active documentation
-Style/Documentation:
-  Enabled: false
 
 # This is a better style, and should be the default IMO
 Style/RegexpLiteral:

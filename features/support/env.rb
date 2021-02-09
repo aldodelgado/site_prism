@@ -25,13 +25,11 @@ end
 Capybara.configure do |config|
   config.default_driver = :site_prism
   config.default_max_wait_time = 0.75
-  config.app_host = 'file://' + File.dirname(__FILE__) + '/../../test_site'
+  config.app_host = "file://#{File.dirname(__FILE__)}/../../test_site"
   config.ignore_hidden_elements = false
 end
 
-Selenium::WebDriver.logger.level = :debug
 Webdrivers.cache_time = 86_400
-Webdrivers.logger.level = :DEBUG
 
 # This will be required until v4 of SitePrism is released
 require 'site_prism/all_there'

@@ -2,6 +2,21 @@
 ### Removed
 
 ### Added
+- Bumped the suite's rubocop gems significantly (As we were tracking behind)
+  - In lieu of this, Some changes were made to the suite styles and auto-config was re-generated
+  - A whole host of documentation updates were made to code-areas lacking it
+([luke-hill])
+
+### Changed
+- Minor refactors
+  - Updated some internal DSL code
+  - Updated development dependencies to be something more reasonable
+([luke-hill])
+
+### Fixed
+
+## [3.7] - 2020-10-15
+### Added
 - Updated README to clarify `displayed?` wait behavior and finder method delgation ([asavageiv])
 
 ### Changed
@@ -11,15 +26,13 @@
   - SitePrism's own `#root_element` now used as a scoping approach, not a `#page` override
   - All delegation logic now just passes object invocation / arguments to Element / Session accordingly
   - Extra logging added where appropriate
-  - `capybara` gem now permitted to go above v3.30
+  - `capybara` gem now permitted to go above `3.30`
 ([twalpole] & [ineverov] & [luke-hill])
 
 - Gem bumps to dev dependencies
   - `rubocop` now must be 0.83.x which permits the NewCops param
   - `selenium-webdriver` minimum supported version is now `3.11`
 ([luke-hill])
-
-### Fixed
 
 ## [3.6] - 2020-08-17
 ### Added
@@ -1052,7 +1065,8 @@ impending major rubocop release
 - First release!
 
 <!-- Releases -->
-[Unreleased]: https://github.com/site-prism/site_prism/compare/v3.6...master
+[Unreleased]: https://github.com/site-prism/site_prism/compare/v3.7...master
+[3.7]:        https://github.com/site-prism/site_prism/compare/v3.6...v3.7
 [3.6]:        https://github.com/site-prism/site_prism/compare/v3.5...v3.6
 [3.5]:        https://github.com/site-prism/site_prism/compare/v3.4.2...v3.5
 [3.4.2]:      https://github.com/site-prism/site_prism/compare/v3.4.1...v3.4.2

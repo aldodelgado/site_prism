@@ -5,11 +5,9 @@ describe SitePrism do
     let!(:locator) { instance_double('Capybara::Node::Element') }
     let(:frame_instance) { frame_class.new }
 
-    before do
-      allow(frame_class).to receive(:new).and_return(frame_instance)
-    end
-
     shared_examples 'iFrame' do
+      before { allow(frame_class).to receive(:new).and_return(frame_instance) }
+
       it 'cannot be called out of block context' do
         expect { page.iframe }.to raise_error(SitePrism::MissingBlockError)
       end
@@ -63,13 +61,32 @@ describe SitePrism do
       end
     end
 
+    describe '#warn_on_invalid_selector_input' do
+      let(:invalid_class) do
+        Class.new(SitePrism::Page) do
+          iframe :bad_iframe_reference, XPathIFrame, '//xpath'
+        end
+      end
+
+      before { wipe_logger! }
+
+      it 'will throw a warning when creating an iFrame with an invalid locator' do
+        log_messages = capture_stdout do
+          described_class.log_level = :WARN
+          invalid_class
+        end
+
+        expect(lines(log_messages)).to eq 2
+      end
+    end
+
     context 'with css elements' do
       let(:page) { CSSPage.new }
       let(:klass) { CSSPage }
       let(:frame_caller_args) { [:css, '.iframe'] }
       let(:frame_class) { CSSIFrame }
-      let(:section_locator) { ['span.locator', wait: 0] }
-      let(:element_caller_args) { ['.some_element', wait: 0] }
+      let(:section_locator) { ['span.locator', { wait: 0 }] }
+      let(:element_caller_args) { ['.some_element', { wait: 0 }] }
 
       it_behaves_like 'iFrame'
     end
@@ -79,8 +96,8 @@ describe SitePrism do
       let(:klass) { XPathPage }
       let(:frame_caller_args) { [:xpath, '//*[@class="iframe"]'] }
       let(:frame_class) { XPathIFrame }
-      let(:section_locator) { [:xpath, '//span[@class="locator"]', wait: 0] }
-      let(:element_caller_args) { [:xpath, '//[@class="some_element"]', wait: 0] }
+      let(:section_locator) { [:xpath, '//span[@class="locator"]', { wait: 0 }] }
+      let(:element_caller_args) { [:xpath, '//[@class="some_element"]', { wait: 0 }] }
 
       it_behaves_like 'iFrame'
     end
